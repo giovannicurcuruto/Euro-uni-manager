@@ -14,18 +14,24 @@ import Avatar from '@mui/material/Avatar';
 import Divider from '@mui/material/Divider';
 import SearchIcon from '@mui/icons-material/Search';
 import InputBase from '@mui/material/InputBase';
+import Brightness4Icon from '@mui/icons-material/Brightness4';
+import Brightness7Icon from '@mui/icons-material/Brightness7';
+import Tooltip from '@mui/material/Tooltip';
 import { styled, alpha } from '@mui/material/styles';
+import { useTheme } from '../contexts/ThemeContext';
 
 // Importando o logo
 import logoSvg from '../assets/eurotec-logo.svg';
 
 const pages = [
   { title: 'Unidades', path: '/visualizar-unidades' },
-  { title: 'Falhas', path: '/adicionar-falhas' },
+  { title: 'Adicionar Falhas', path: '/adicionar-falhas' },
+  { title: 'Falhas', path: '/listagem-falhas' },
 ];
 
 function Navbar() {
   const [anchorElNav, setAnchorElNav] = useState<null | HTMLElement>(null);
+  const { mode, toggleTheme } = useTheme();
 
   const handleOpenNavMenu = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorElNav(event.currentTarget);
@@ -185,8 +191,17 @@ const StyledInputBase = styled(InputBase)(({ theme }) => ({
             ))}
           </Box>
           
+          {/* Botão de alternância de tema */}
+          <Box sx={{ flexGrow: 0, mx: 1 }}>
+            <Tooltip title={mode === 'light' ? 'Mudar para modo escuro' : 'Mudar para modo claro'}>
+              <IconButton onClick={toggleTheme} color="inherit" aria-label="alternar tema">
+                {mode === 'light' ? <Brightness4Icon /> : <Brightness7Icon />}
+              </IconButton>
+            </Tooltip>
+          </Box>
+          
           {/* Avatar do usuário */}
-          <Box sx={{ flexGrow: 0, ml: 2 }}>
+          <Box sx={{ flexGrow: 0, ml: 1 }}>
             <IconButton sx={{ p: 0 }}>
               <Avatar alt="User" sx={{ bgcolor: alpha('#ffffff', 0.3), width: 32, height: 32 }} />
             </IconButton>

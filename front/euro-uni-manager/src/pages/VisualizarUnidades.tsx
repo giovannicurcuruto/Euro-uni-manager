@@ -29,6 +29,15 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import FilterListIcon from '@mui/icons-material/FilterList';
 
+// Importando os dados de falhas da página de monitoramento para calcular falhas pendentes
+import { falhasUnidades, Falha } from './MonitoramentoUnidade';
+
+// Função para calcular o número de falhas ativas (pendentes) por unidade
+const calcularFalhasPendentes = (unidadeId: number) => {
+  const falhasDaUnidade = falhasUnidades[unidadeId] || [];
+  return falhasDaUnidade.filter(falha => falha.ativa).length;
+};
+
 // Dados de exemplo para a tabela
 const unidadesIniciais = [
   { 
@@ -39,7 +48,8 @@ const unidadesIniciais = [
     falhaOcorrida: 'Falha no sistema de refrigeração',
     dataFalha: '10/05/2024',
     observacoes: 'Necessita manutenção urgente',
-    ticketZendesk: 'ZD-1234'
+    ticketZendesk: 'ZD-1234',
+    falhasPendentes: calcularFalhasPendentes(1)
   },
   { 
     id: 2, 
@@ -49,7 +59,8 @@ const unidadesIniciais = [
     falhaOcorrida: 'Manutenção preventiva',
     dataFalha: '15/05/2024',
     observacoes: 'Agendado para próxima semana',
-    ticketZendesk: 'ZD-5678'
+    ticketZendesk: 'ZD-5678',
+    falhasPendentes: calcularFalhasPendentes(2)
   },
   { 
     id: 3, 
@@ -59,7 +70,8 @@ const unidadesIniciais = [
     falhaOcorrida: 'Troca de equipamentos',
     dataFalha: '20/05/2024',
     observacoes: 'Equipamentos já adquiridos',
-    ticketZendesk: 'ZD-9012'
+    ticketZendesk: 'ZD-9012',
+    falhasPendentes: calcularFalhasPendentes(3)
   },
 ];
 
@@ -204,6 +216,7 @@ function VisualizarUnidades() {
                 <StyledHeaderCell>Falha Ocorrida</StyledHeaderCell>
                 <StyledHeaderCell>Data da Falha</StyledHeaderCell>
                 <StyledHeaderCell>Ticket</StyledHeaderCell>
+                <StyledHeaderCell>Falhas Pendentes</StyledHeaderCell>
                 <StyledHeaderCell align="center">Ações</StyledHeaderCell>
               </TableRow>
             </StyledTableHead>
@@ -240,6 +253,18 @@ function VisualizarUnidades() {
                         }} 
                       />
                     </StyledTableCell>
+                    <StyledTableCell>
+                      <Chip 
+                        label={unidade.falhasPendentes} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: unidade.falhasPendentes > 0 ? alpha('#f44336', 0.1) : alpha('#4caf50', 0.1), 
+                          color: unidade.falhasPendentes > 0 ? '#f44336' : '#4caf50',
+                          fontWeight: 'medium',
+                          fontSize: '0.75rem'
+                        }} 
+                      />
+                    </StyledTableCell>
                     <StyledTableCell align="center">
                       <ActionButton 
                         color="primary" 
@@ -262,7 +287,7 @@ function VisualizarUnidades() {
                 ))
               ) : (
                 <StyledTableRow>
-                  <StyledTableCell colSpan={7} align="center">
+                  <StyledTableCell colSpan={8} align="center">
                     <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
                       Nenhuma unidade encontrada
                     </Typography>

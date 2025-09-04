@@ -11,14 +11,17 @@ import {
   Divider,
   Typography,
   Collapse,
+  useTheme,
 } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import BusinessIcon from '@mui/icons-material/Business';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import MonitorIcon from '@mui/icons-material/Monitor';
 import ErrorIcon from '@mui/icons-material/Error';
+import DashboardIcon from '@mui/icons-material/Dashboard';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import { useTheme as useCustomTheme } from '../contexts/ThemeContext';
 
 // Largura do drawer
 const drawerWidth = 240;
@@ -37,6 +40,7 @@ interface MenuGroupProps {
 
 const menuItems: (MenuItemProps | MenuGroupProps)[] = [
   { title: 'Início', path: '/', icon: <HomeIcon /> },
+  { title: 'Dashboard', path: '/dashboard', icon: <DashboardIcon /> },
   {
     title: 'Unidades',
     icon: <BusinessIcon />,
@@ -51,12 +55,15 @@ const menuItems: (MenuItemProps | MenuGroupProps)[] = [
     icon: <ErrorIcon />,
     items: [
       { title: 'Adicionar Falhas', path: '/adicionar-falhas', icon: <ErrorIcon /> },
+      { title: 'Listagem de Falhas', path: '/listagem-falhas', icon: <ErrorIcon /> },
     ],
   },
 ];
 
 function Sidebar() {
   const location = useLocation();
+  const muiTheme = useTheme();
+  const { mode } = useCustomTheme();
   const [openGroups, setOpenGroups] = useState<Record<string, boolean>>({
     'Unidades': true,
     'Falhas': true,
@@ -80,8 +87,9 @@ function Sidebar() {
         '& .MuiDrawer-paper': {
           width: drawerWidth,
           boxSizing: 'border-box',
-          backgroundColor: '#f5f5f5',
-          borderRight: '1px solid #e0e0e0',
+          backgroundColor: mode === 'light' ? '#f5f5f5' : '#1e1e1e',
+          borderRight: `1px solid ${mode === 'light' ? '#e0e0e0' : '#333333'}`,
+          color: mode === 'light' ? '#333333' : '#ffffff',
         },
       }}
     >
@@ -104,17 +112,17 @@ function Sidebar() {
                     borderRadius: 1,
                     mb: 0.5,
                     '&.Mui-selected': {
-                      backgroundColor: 'rgba(0, 179, 136, 0.1)',
+                      backgroundColor: mode === 'light' ? 'rgba(0, 179, 136, 0.1)' : 'rgba(0, 179, 136, 0.2)',
                       color: '#00B388',
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 179, 136, 0.2)',
+                        backgroundColor: mode === 'light' ? 'rgba(0, 179, 136, 0.2)' : 'rgba(0, 179, 136, 0.3)',
                       },
                       '& .MuiListItemIcon-root': {
                         color: '#00B388',
                       },
                     },
                     '&:hover': {
-                      backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                      backgroundColor: mode === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
                     },
                   }}
                 >
@@ -137,7 +145,7 @@ function Sidebar() {
                       borderRadius: 1,
                       mb: 0.5,
                       '&:hover': {
-                        backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                        backgroundColor: mode === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
                       },
                     }}
                   >
@@ -161,17 +169,17 @@ function Sidebar() {
                             borderRadius: 1,
                             mb: 0.5,
                             '&.Mui-selected': {
-                              backgroundColor: 'rgba(0, 179, 136, 0.1)',
+                              backgroundColor: mode === 'light' ? 'rgba(0, 179, 136, 0.1)' : 'rgba(0, 179, 136, 0.2)',
                               color: '#00B388',
                               '&:hover': {
-                                backgroundColor: 'rgba(0, 179, 136, 0.2)',
+                                backgroundColor: mode === 'light' ? 'rgba(0, 179, 136, 0.2)' : 'rgba(0, 179, 136, 0.3)',
                               },
                               '& .MuiListItemIcon-root': {
                                 color: '#00B388',
                               },
                             },
                             '&:hover': {
-                              backgroundColor: 'rgba(0, 0, 0, 0.04)',
+                              backgroundColor: mode === 'light' ? 'rgba(0, 0, 0, 0.04)' : 'rgba(255, 255, 255, 0.05)',
                             },
                           }}
                         >

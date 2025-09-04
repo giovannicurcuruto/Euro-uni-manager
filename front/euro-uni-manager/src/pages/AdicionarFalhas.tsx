@@ -29,6 +29,7 @@ function AdicionarFalhas() {
   const [unidadeSelecionada, setUnidadeSelecionada] = useState<string>('');
   const [falhaOcorrida, setFalhaOcorrida] = useState<string>('');
   const [dataFalha, setDataFalha] = useState<Date | null>(null);
+  const [observacao, setObservacao] = useState<string>('');
   
   // Estados para validação
   const [unidadeError, setUnidadeError] = useState<boolean>(false);
@@ -70,11 +71,14 @@ function AdicionarFalhas() {
         unidadeId: unidadeSelecionada,
         falhaOcorrida,
         dataFalha,
+        observacao,
+        ativa: true, // Por padrão, a falha é criada como ativa
       });
       
       // Limpar o formulário após o envio
       setFalhaOcorrida('');
       setDataFalha(null);
+      setObservacao('');
       // Manter a unidade selecionada para facilitar o registro de múltiplas falhas
     }
   };
@@ -139,6 +143,19 @@ function AdicionarFalhas() {
                   }}
                 />
               </LocalizationProvider>
+            </Grid>
+            
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                id="observacao"
+                label="Observação"
+                multiline
+                rows={4}
+                value={observacao}
+                onChange={(e) => setObservacao(e.target.value)}
+                placeholder="Adicione informações relevantes sobre a falha"
+              />
             </Grid>
             
             <Grid item xs={12} sx={{ mt: 2 }}>
