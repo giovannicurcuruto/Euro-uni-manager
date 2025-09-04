@@ -1,0 +1,10 @@
+Django==5.2.6
+sqlalchemy==2.0.43
+django-cors-headers==4.7.0
+djangorestframework==3.16.1
+python-decouple==3.8
+asgiref==3.9.1
+sqlparse==0.5.3
+typing-extensions==4.15.0
+tzdata==2025.2
+greenlet==3.2.4

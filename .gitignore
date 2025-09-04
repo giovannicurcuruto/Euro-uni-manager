@@ -1,0 +1,134 @@
+# Backend - Python/Django
+back/venv/
+back/env/
+back/.venv/
+back/.env/
+back/__pycache__/
+back/*.py[cod]
+back/*$py.class
+back/*.so
+back/.Python
+back/build/
+back/develop-eggs/
+back/dist/
+back/downloads/
+back/eggs/
+back/.eggs/
+back/lib/
+back/lib64/
+back/parts/
+back/sdist/
+back/var/
+back/wheels/
+back/share/python-wheels/
+back/*.egg-info/
+back/.installed.cfg
+back/*.egg
+back/*.log
+back/local_settings.py
+back/db.sqlite3
+back/db.sqlite3-journal
+back/media/
+back/staticfiles/
+back/.env
+back/.coverage
+back/htmlcov/
+back/.pytest_cache/
+
+# Frontend - Node.js/React
+front/node_modules/
+front/npm-debug.log*
+front/yarn-debug.log*
+front/yarn-error.log*
+front/pnpm-debug.log*
+front/lerna-debug.log*
+front/dist/
+front/dist-ssr/
+front/*.local
+front/.vite/
+front/.env
+front/.env.local
+front/.env.development.local
+front/.env.test.local
+front/.env.production.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Runtime data
+pids/
+*.pid
+*.seed
+*.pid.lock
+
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
+
+# nyc test coverage
+.nyc_output
+
+# Dependency directories
+node_modules/
+jspm_packages/
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+dist
+
+# Gatsby files
+.cache/
+public
+
+# Storybook build outputs
+.out
+.storybook-out
+
+# Temporary folders
+tmp/
+temp/
