@@ -15,6 +15,8 @@ const pages = [
   { title: 'Início', path: '/' },
   { title: 'Visualizar Unidades', path: '/visualizar-unidades' },
   { title: 'Adicionar Unidades', path: '/adicionar-unidades' },
+  { title: 'Monitoramento da Unidade', path: '/monitoramento-unidade' },
+  { title: 'Adicionar Falhas', path: '/adicionar-falhas' },
 ];
 
 function Navbar() {
@@ -38,7 +40,7 @@ function Navbar() {
             component="div"
             sx={{ mr: 2, display: { xs: 'none', md: 'flex' } }}
           >
-            EURO-UNI MANAGER
+            Gerenciador do Suporte - Eurotec
           </Typography>
 
           <Box sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}>
@@ -89,7 +91,7 @@ function Navbar() {
             component="div"
             sx={{ flexGrow: 1, display: { xs: 'flex', md: 'none' } }}
           >
-            EURO-UNI MANAGER
+            Gerenciador do Suporte - Eurotec
           </Typography>
           
           <Box sx={{ flexGrow: 1, display: { xs: 'none', md: 'flex' } }}>

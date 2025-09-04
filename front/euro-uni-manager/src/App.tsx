@@ -14,6 +14,8 @@ import Footer from './components/Footer';
 import Home from './pages/Home';
 import VisualizarUnidades from './pages/VisualizarUnidades';
 import AdicionarUnidades from './pages/AdicionarUnidades';
+import MonitoramentoUnidade from './pages/MonitoramentoUnidade';
+import AdicionarFalhas from './pages/AdicionarFalhas';
 
 const theme = createTheme({
   palette: {
@@ -38,6 +40,8 @@ function App() {
               <Route path="/" element={<Home />} />
               <Route path="/visualizar-unidades" element={<VisualizarUnidades />} />
               <Route path="/adicionar-unidades" element={<AdicionarUnidades />} />
+              <Route path="/monitoramento-unidade" element={<MonitoramentoUnidade />} />
+              <Route path="/adicionar-falhas" element={<AdicionarFalhas />} />
             </Routes>
           </Box>
           <Footer />
