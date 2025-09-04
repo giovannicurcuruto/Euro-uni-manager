@@ -17,9 +17,17 @@ import {
   DialogContent,
   DialogContentText,
   DialogTitle,
+  Chip,
+  TextField,
+  InputAdornment,
+  Grid,
 } from '@mui/material';
+import { styled, alpha } from '@mui/material/styles';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import SearchIcon from '@mui/icons-material/Search';
+import AddIcon from '@mui/icons-material/Add';
+import FilterListIcon from '@mui/icons-material/FilterList';
 
 // Dados de exemplo para a tabela
 const unidadesIniciais = [
@@ -55,10 +63,47 @@ const unidadesIniciais = [
   },
 ];
 
+// Estilizando componentes da tabela
+const StyledTableContainer = styled(TableContainer)(({ theme }) => ({
+  borderRadius: theme.shape.borderRadius,
+  boxShadow: 'none',
+}));
+
+const StyledTableHead = styled(TableHead)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+}));
+
+const StyledTableCell = styled(TableCell)(({ theme }) => ({
+  borderBottom: `1px solid ${alpha(theme.palette.primary.main, 0.1)}`,
+  padding: theme.spacing(1.5),
+}));
+
+const StyledHeaderCell = styled(TableCell)(({ theme }) => ({
+  backgroundColor: alpha(theme.palette.primary.main, 0.1),
+  color: theme.palette.primary.main,
+  fontWeight: 'bold',
+  borderBottom: `2px solid ${alpha(theme.palette.primary.main, 0.2)}`,
+  padding: theme.spacing(1.5),
+}));
+
+const StyledTableRow = styled(TableRow)(({ theme }) => ({
+  '&:nth-of-type(even)': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.02),
+  },
+  '&:hover': {
+    backgroundColor: alpha(theme.palette.primary.main, 0.05),
+  },
+}));
+
+const ActionButton = styled(IconButton)(({ theme }) => ({
+  padding: theme.spacing(0.5),
+}));
+
 function VisualizarUnidades() {
   const [unidades, setUnidades] = useState(unidadesIniciais);
   const [openDialog, setOpenDialog] = useState(false);
   const [unidadeParaExcluir, setUnidadeParaExcluir] = useState<number | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   const handleEditClick = (id: number) => {
     // Aqui você implementaria a navegação para a página de edição
@@ -84,56 +129,149 @@ function VisualizarUnidades() {
     setUnidadeParaExcluir(null);
   };
 
+  // Filtrar unidades com base no termo de pesquisa
+  const filteredUnidades = unidades.filter(unidade => 
+    unidade.nomeUnidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    unidade.grupoUnidade.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    unidade.tecnicoUnidade.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(event.target.value);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Visualizar Unidades
-      </Typography>
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5" component="h1" fontWeight="bold" color="primary">
+          Visualizar Unidades
+        </Typography>
+        <Button 
+          variant="contained" 
+          color="primary" 
+          startIcon={<AddIcon />}
+          sx={{ borderRadius: 2 }}
+        >
+          Nova Unidade
+        </Button>
+      </Box>
       
-      <Paper elevation={3} sx={{ mt: 4, p: 2 }}>
-        <TableContainer>
+      <Paper elevation={1} sx={{ mb: 4, borderRadius: 2, overflow: 'hidden' }}>
+        <Box sx={{ p: 2, bgcolor: '#f5f5f5', borderBottom: '1px solid #e0e0e0' }}>
+          <Grid container spacing={2} alignItems="center">
+            <Grid item xs={12} md={6}>
+              <TextField
+                fullWidth
+                placeholder="Pesquisar unidades..."
+                variant="outlined"
+                size="small"
+                value={searchTerm}
+                onChange={handleSearchChange}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon color="primary" />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  backgroundColor: 'white',
+                  '& .MuiOutlinedInput-root': {
+                    borderRadius: 2,
+                  }
+                }}
+              />
+            </Grid>
+            <Grid item xs={12} md={6} sx={{ display: 'flex', justifyContent: { xs: 'flex-start', md: 'flex-end' } }}>
+              <Button 
+                variant="outlined" 
+                startIcon={<FilterListIcon />}
+                sx={{ borderRadius: 2, mr: 1 }}
+              >
+                Filtrar
+              </Button>
+            </Grid>
+          </Grid>
+        </Box>
+        
+        <StyledTableContainer>
           <Table>
-            <TableHead>
+            <StyledTableHead>
               <TableRow>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Unidade</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Grupo</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Técnico</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Falha Ocorrida</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Data da Falha</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Ticket</Typography></TableCell>
-                <TableCell><Typography variant="subtitle1" fontWeight="bold">Ações</Typography></TableCell>
+                <StyledHeaderCell>Unidade</StyledHeaderCell>
+                <StyledHeaderCell>Grupo</StyledHeaderCell>
+                <StyledHeaderCell>Técnico</StyledHeaderCell>
+                <StyledHeaderCell>Falha Ocorrida</StyledHeaderCell>
+                <StyledHeaderCell>Data da Falha</StyledHeaderCell>
+                <StyledHeaderCell>Ticket</StyledHeaderCell>
+                <StyledHeaderCell align="center">Ações</StyledHeaderCell>
               </TableRow>
-            </TableHead>
+            </StyledTableHead>
             <TableBody>
-              {unidades.map((unidade) => (
-                <TableRow key={unidade.id}>
-                  <TableCell>{unidade.nomeUnidade}</TableCell>
-                  <TableCell>{unidade.grupoUnidade}</TableCell>
-                  <TableCell>{unidade.tecnicoUnidade}</TableCell>
-                  <TableCell>{unidade.falhaOcorrida}</TableCell>
-                  <TableCell>{unidade.dataFalha}</TableCell>
-                  <TableCell>{unidade.ticketZendesk}</TableCell>
-                  <TableCell>
-                    <IconButton 
-                      color="primary" 
-                      aria-label="editar" 
-                      onClick={() => handleEditClick(unidade.id)}
-                    >
-                      <EditIcon />
-                    </IconButton>
-                    <IconButton 
-                      color="error" 
-                      aria-label="excluir" 
-                      onClick={() => handleDeleteClick(unidade.id)}
-                    >
-                      <DeleteIcon />
-                    </IconButton>
-                  </TableCell>
-                </TableRow>
-              ))}
+              {filteredUnidades.length > 0 ? (
+                filteredUnidades.map((unidade) => (
+                  <StyledTableRow key={unidade.id}>
+                    <StyledTableCell>
+                      <Typography variant="body2" fontWeight="medium">{unidade.nomeUnidade}</Typography>
+                    </StyledTableCell>
+                    <StyledTableCell>
+                      <Chip 
+                        label={unidade.grupoUnidade} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: alpha('#00B388', 0.1), 
+                          color: '#00B388',
+                          fontWeight: 'medium',
+                          fontSize: '0.75rem'
+                        }} 
+                      />
+                    </StyledTableCell>
+                    <StyledTableCell>{unidade.tecnicoUnidade}</StyledTableCell>
+                    <StyledTableCell>{unidade.falhaOcorrida}</StyledTableCell>
+                    <StyledTableCell>{unidade.dataFalha}</StyledTableCell>
+                    <StyledTableCell>
+                      <Chip 
+                        label={unidade.ticketZendesk} 
+                        size="small" 
+                        sx={{ 
+                          bgcolor: '#f0f0f0', 
+                          fontWeight: 'medium',
+                          fontSize: '0.75rem'
+                        }} 
+                      />
+                    </StyledTableCell>
+                    <StyledTableCell align="center">
+                      <ActionButton 
+                        color="primary" 
+                        aria-label="editar" 
+                        onClick={() => handleEditClick(unidade.id)}
+                        size="small"
+                      >
+                        <EditIcon fontSize="small" />
+                      </ActionButton>
+                      <ActionButton 
+                        color="error" 
+                        aria-label="excluir" 
+                        onClick={() => handleDeleteClick(unidade.id)}
+                        size="small"
+                      >
+                        <DeleteIcon fontSize="small" />
+                      </ActionButton>
+                    </StyledTableCell>
+                  </StyledTableRow>
+                ))
+              ) : (
+                <StyledTableRow>
+                  <StyledTableCell colSpan={7} align="center">
+                    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+                      Nenhuma unidade encontrada
+                    </Typography>
+                  </StyledTableCell>
+                </StyledTableRow>
+              )}
             </TableBody>
           </Table>
-        </TableContainer>
+        </StyledTableContainer>
       </Paper>
 
       {/* Diálogo de confirmação para exclusão */}
@@ -142,18 +280,35 @@ function VisualizarUnidades() {
         onClose={handleCancelDelete}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description"
+        PaperProps={{
+          sx: { borderRadius: 2 }
+        }}
       >
-        <DialogTitle id="alert-dialog-title">
-          Confirmar exclusão
+        <DialogTitle id="alert-dialog-title" sx={{ pb: 1 }}>
+          <Typography variant="h6" color="primary" fontWeight="bold">
+            Confirmar exclusão
+          </Typography>
         </DialogTitle>
         <DialogContent>
           <DialogContentText id="alert-dialog-description">
             Tem certeza que deseja excluir esta unidade? Esta ação não pode ser desfeita.
           </DialogContentText>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCancelDelete}>Cancelar</Button>
-          <Button onClick={handleConfirmDelete} color="error" autoFocus>
+        <DialogActions sx={{ px: 3, pb: 2 }}>
+          <Button 
+            onClick={handleCancelDelete} 
+            variant="outlined"
+            sx={{ borderRadius: 2, textTransform: 'none' }}
+          >
+            Cancelar
+          </Button>
+          <Button 
+            onClick={handleConfirmDelete} 
+            color="error" 
+            variant="contained"
+            autoFocus
+            sx={{ borderRadius: 2, textTransform: 'none' }}
+          >
             Excluir
           </Button>
         </DialogActions>

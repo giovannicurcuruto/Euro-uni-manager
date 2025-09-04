@@ -122,20 +122,68 @@ function AdicionarUnidades() {
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Adicionar Unidades
-      </Typography>
-      
-      <Paper elevation={3} sx={{ p: 4, mt: 4 }}>
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h5" component="h1" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
+          Adicionar unidade
+        </Typography>
+        
         <Box component="form" onSubmit={handleSubmit} noValidate>
           <Grid container spacing={3}>
-            <Grid item xs={12} sm={6}>
+            {/* Primeira linha com os selects */}
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel id="tipo-usuario-label">Tipos de usuários</InputLabel>
+                <Select
+                  labelId="tipo-usuario-label"
+                  id="tipo-usuario"
+                  label="Tipos de usuários"
+                  value=""
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value=""><em>Selecione alguma opção...</em></MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel id="grupo-label">Grupo</InputLabel>
+                <Select
+                  labelId="grupo-label"
+                  id="grupoUnidade"
+                  name="grupoUnidade"
+                  label="Grupo"
+                  value={formData.grupoUnidade}
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value=""><em>Selecione alguma opção...</em></MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <FormControl fullWidth>
+                <InputLabel id="unidade-label">Unidade</InputLabel>
+                <Select
+                  labelId="unidade-label"
+                  id="unidade"
+                  label="Unidade"
+                  value=""
+                  onChange={handleSelectChange}
+                >
+                  <MenuItem value=""><em>Selecione alguma opção...</em></MenuItem>
+                </Select>
+              </FormControl>
+            </Grid>
+            
+            {/* Segunda linha com campos de texto */}
+            <Grid item xs={12} md={6}>
               <TextField
                 required
                 fullWidth
                 id="nomeUnidade"
                 name="nomeUnidade"
-                label="Nome da Unidade"
+                label="Nome"
                 value={formData.nomeUnidade}
                 onChange={handleChange}
                 error={!!errors.nomeUnidade}
@@ -143,18 +191,39 @@ function AdicionarUnidades() {
               />
             </Grid>
             
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12} md={6}>
               <TextField
                 fullWidth
-                id="grupoUnidade"
-                name="grupoUnidade"
-                label="Grupo da Unidade"
-                value={formData.grupoUnidade}
+                id="email"
+                name="email"
+                label="E-mail"
+                type="email"
                 onChange={handleChange}
               />
             </Grid>
             
-            <Grid item xs={12} sm={6}>
+            {/* Terceira linha */}
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                id="tipoUsuario"
+                name="tipoUsuario"
+                label="Tipo de Usuário"
+                onChange={handleChange}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                id="telefone"
+                name="telefone"
+                label="Telefone"
+                onChange={handleChange}
+              />
+            </Grid>
+            
+            <Grid item xs={12} md={4}>
               <TextField
                 fullWidth
                 id="tecnicoUnidade"
@@ -165,49 +234,7 @@ function AdicionarUnidades() {
               />
             </Grid>
             
-            <Grid item xs={12} sm={6}>
-              <TextField
-                required
-                fullWidth
-                id="falhaOcorrida"
-                name="falhaOcorrida"
-                label="Falha Ocorrida"
-                value={formData.falhaOcorrida}
-                onChange={handleChange}
-                error={!!errors.falhaOcorrida}
-                helperText={errors.falhaOcorrida}
-              />
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-                <DatePicker
-                  label="Data da Falha *"
-                  value={formData.dataFalha}
-                  onChange={handleDateChange}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                      error: !!errors.dataFalha,
-                      helperText: errors.dataFalha,
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                id="ticketZendesk"
-                name="ticketZendesk"
-                label="Ticket Zendesk"
-                value={formData.ticketZendesk}
-                onChange={handleChange}
-              />
-            </Grid>
-            
+            {/* Quarta linha */}
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -221,14 +248,20 @@ function AdicionarUnidades() {
               />
             </Grid>
             
-            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', mt: 2 }}>
+            {/* Botões de ação */}
+            <Grid item xs={12} sx={{ display: 'flex', justifyContent: 'flex-end', gap: 2, mt: 2 }}>
+              <Button
+                variant="outlined"
+                color="primary"
+              >
+                Cancelar
+              </Button>
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                size="large"
               >
-                Adicionar Unidade
+                Adicionar unidade
               </Button>
             </Grid>
           </Grid>
