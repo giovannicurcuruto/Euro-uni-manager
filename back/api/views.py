@@ -1,6 +1,8 @@
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from .models import UnidadeDjango, FalhaDjango
+from .serializers import UnidadeSerializer, FalhaSerializer
 from .mock_data import (
     MOCK_UNIVERSITIES, MOCK_COURSES, MOCK_STUDENTS,
     get_university_by_id, get_course_by_id, get_student_by_id,
@@ -121,3 +123,84 @@ def dashboard_stats(request):
     }
     
     return Response(stats)
+
+# CRUD para Unidades
+@api_view(['GET', 'POST'])
+def unidade_list(request):
+    """Lista todas as unidades ou cria uma nova"""
+    if request.method == 'GET':
+        unidades = UnidadeDjango.objects.all()
+        serializer = UnidadeSerializer(unidades, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = UnidadeSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def unidade_detail(request, pk):
+    """Detalhes, atualização ou exclusão de uma unidade específica"""
+    try:
+        unidade = UnidadeDjango.objects.get(pk=pk)
+    except UnidadeDjango.DoesNotExist:
+        return Response({'error': 'Unidade não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = UnidadeSerializer(unidade)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = UnidadeSerializer(unidade, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        unidade.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['GET', 'POST'])
+def falha_list(request):
+    """
+    Lista todas as falhas ou cria uma nova falha
+    """
+    if request.method == 'GET':
+        falhas = FalhaDjango.objects.all()
+        serializer = FalhaSerializer(falhas, many=True)
+        return Response(serializer.data)
+    
+    elif request.method == 'POST':
+        serializer = FalhaSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['GET', 'PUT', 'DELETE'])
+def falha_detail(request, pk):
+    """
+    Recupera, atualiza ou deleta uma falha específica
+    """
+    try:
+        falha = FalhaDjango.objects.get(pk=pk)
+    except FalhaDjango.DoesNotExist:
+        return Response({'error': 'Falha não encontrada'}, status=status.HTTP_404_NOT_FOUND)
+    
+    if request.method == 'GET':
+        serializer = FalhaSerializer(falha)
+        return Response(serializer.data)
+    
+    elif request.method == 'PUT':
+        serializer = FalhaSerializer(falha, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    
+    elif request.method == 'DELETE':
+        falha.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)

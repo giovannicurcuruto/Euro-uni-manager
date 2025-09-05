@@ -93,6 +93,40 @@ class StudentDjango(models.Model):
     birth_date = models.DateField(null=True, blank=True)
     enrollment_date = models.DateTimeField(auto_now_add=True)
     course = models.ForeignKey(CourseDjango, on_delete=models.CASCADE, related_name='students')
-    
+
     def __str__(self):
         return f"{self.first_name} {self.last_name}"
+
+class UnidadeDjango(models.Model):
+    nome_unidade = models.CharField(max_length=200, verbose_name="Nome da Unidade")
+    grupo_unidade = models.CharField(max_length=100, verbose_name="Grupo")
+    tecnico_unidade = models.CharField(max_length=200, blank=True, verbose_name="Técnico da Unidade")
+    id_unidade = models.CharField(max_length=50, unique=True, verbose_name="ID da Unidade")
+    observacoes = models.TextField(blank=True, verbose_name="Observações")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Unidade"
+        verbose_name_plural = "Unidades"
+        ordering = ['nome_unidade']
+
+    def __str__(self):
+        return f"{self.nome_unidade} ({self.id_unidade})"
+
+class FalhaDjango(models.Model):
+    unidade = models.ForeignKey(UnidadeDjango, on_delete=models.CASCADE, related_name='falhas', verbose_name="Unidade")
+    falha_ocorrida = models.CharField(max_length=500, verbose_name="Falha Ocorrida")
+    data_falha = models.DateField(verbose_name="Data da Falha")
+    observacao = models.TextField(blank=True, verbose_name="Observação")
+    ativa = models.BooleanField(default=True, verbose_name="Ativa")
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Falha"
+        verbose_name_plural = "Falhas"
+        ordering = ['-data_falha', '-created_at']
+
+    def __str__(self):
+        return f"{self.unidade.nome_unidade} - {self.falha_ocorrida}"

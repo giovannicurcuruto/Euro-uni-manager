@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import UniversityDjango, CourseDjango, StudentDjango
+from .models import UniversityDjango, CourseDjango, StudentDjango, UnidadeDjango, FalhaDjango
 
 class UniversitySerializer(serializers.ModelSerializer):
     courses_count = serializers.SerializerMethodField()
@@ -45,3 +45,17 @@ class UniversityDetailSerializer(UniversitySerializer):
     
     class Meta(UniversitySerializer.Meta):
         fields = UniversitySerializer.Meta.fields + ['courses']
+
+class UnidadeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UnidadeDjango
+        fields = ['id', 'nome_unidade', 'grupo_unidade', 'tecnico_unidade', 'id_unidade', 'observacoes', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+class FalhaSerializer(serializers.ModelSerializer):
+    unidade_nome = serializers.CharField(source='unidade.nome_unidade', read_only=True)
+    
+    class Meta:
+        model = FalhaDjango
+        fields = ['id', 'unidade', 'unidade_nome', 'falha_ocorrida', 'data_falha', 'observacao', 'ativa', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']

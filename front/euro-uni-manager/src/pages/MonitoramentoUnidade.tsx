@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -23,64 +23,102 @@ import {
   TextField,
   Switch,
   FormControlLabel,
+  CircularProgress,
+  Alert,
+  Snackbar,
+  Chip,
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+
+// Interface para o tipo de unidade
+interface Unidade {
+  id: number;
+  nome_unidade: string;
+  grupo_unidade: string;
+  tecnico_unidade: string;
+  id_unidade: string;
+  observacoes: string;
+}
 
 // Interface para o tipo de falha
 export interface Falha {
   id: number;
-  falhaOcorrida: string;
-  dataFalha: string;
+  falha_ocorrida: string;
+  data_falha: string;
   ativa: boolean;
   observacao?: string;
+  unidade: number;
+  unidade_nome?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
-// Dados de exemplo para as unidades
-const unidades = [
-  { id: 1, nome: 'Unidade A' },
-  { id: 2, nome: 'Unidade B' },
-  { id: 3, nome: 'Unidade C' },
-];
-
-// Dados de exemplo para as falhas
-export const falhasUnidades = {
-  1: [
-    { id: 1, falhaOcorrida: 'Falha no sistema de refrigeração', dataFalha: '10/05/2024', ativa: true, observacao: 'Aguardando peças para reparo' },
-    { id: 2, falhaOcorrida: 'Problema na rede elétrica', dataFalha: '15/04/2024', ativa: true, observacao: 'Técnico agendado para 25/05' },
-    { id: 3, falhaOcorrida: 'Manutenção preventiva', dataFalha: '20/03/2024', ativa: false, observacao: 'Concluída com sucesso' },
-  ],
-  2: [
-    { id: 1, falhaOcorrida: 'Manutenção preventiva', dataFalha: '15/05/2024', ativa: false, observacao: 'Realizada conforme cronograma' },
-    { id: 2, falhaOcorrida: 'Atualização de software', dataFalha: '10/04/2024', ativa: false, observacao: 'Versão 2.3 instalada' },
-  ],
-  3: [
-    { id: 1, falhaOcorrida: 'Troca de equipamentos', dataFalha: '20/05/2024', ativa: true, observacao: 'Aguardando entrega dos novos equipamentos' },
-    { id: 2, falhaOcorrida: 'Falha no sistema de segurança', dataFalha: '05/05/2024', ativa: true, observacao: 'Em análise pelo suporte' },
-    { id: 3, falhaOcorrida: 'Problema na conexão de internet', dataFalha: '01/05/2024', ativa: true, observacao: 'Operadora notificada' },
-    { id: 4, falhaOcorrida: 'Manutenção preventiva', dataFalha: '15/04/2024', ativa: false, observacao: 'Concluída sem intercorrências' },
-  ],
-};
-
 function MonitoramentoUnidade() {
+  const [unidades, setUnidades] = useState<Unidade[]>([]);
   const [unidadeSelecionada, setUnidadeSelecionada] = useState<string>('');
   const [falhas, setFalhas] = useState<Falha[]>([]);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [falhaEditando, setFalhaEditando] = useState<Falha | null>(null);
+  const [loading, setLoading] = useState(false);
+  const [loadingUnidades, setLoadingUnidades] = useState(true);
+  const [loadingFalhas, setLoadingFalhas] = useState(false);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  // Carregar unidades do backend
+  useEffect(() => {
+    const fetchUnidades = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/unidades/');
+        if (response.ok) {
+          const data = await response.json();
+          setUnidades(data);
+        } else {
+          setErrorMessage('Erro ao carregar unidades');
+        }
+      } catch (error) {
+        setErrorMessage('Erro ao conectar com o servidor');
+      } finally {
+        setLoadingUnidades(false);
+      }
+    };
+
+    fetchUnidades();
+  }, []);
+
+  // Carregar falhas da unidade selecionada
+  const fetchFalhasUnidade = async (unidadeId: string) => {
+    setLoadingFalhas(true);
+    try {
+      const response = await fetch('http://127.0.0.1:8000/api/falhas/');
+      if (response.ok) {
+        const data = await response.json();
+        // Filtrar falhas da unidade selecionada
+        const falhasUnidade = data.filter((falha: Falha) => falha.unidade === parseInt(unidadeId));
+        setFalhas(falhasUnidade);
+      } else {
+        setErrorMessage('Erro ao carregar falhas');
+      }
+    } catch (error) {
+      setErrorMessage('Erro ao conectar com o servidor');
+    } finally {
+      setLoadingFalhas(false);
+    }
+  };
 
   const handleUnidadeChange = (event: SelectChangeEvent) => {
     const unidadeId = event.target.value;
     setUnidadeSelecionada(unidadeId);
     
-    // Carrega as falhas da unidade selecionada
     if (unidadeId) {
-      setFalhas(falhasUnidades[Number(unidadeId)] || []);
+      fetchFalhasUnidade(unidadeId);
     } else {
       setFalhas([]);
     }
   };
   
   const handleEditClick = (falha: Falha) => {
-    setFalhaEditando(falha);
+    setFalhaEditando({ ...falha });
     setOpenEditDialog(true);
   };
   
@@ -89,21 +127,44 @@ function MonitoramentoUnidade() {
     setFalhaEditando(null);
   };
   
-  const handleSaveEdit = () => {
+  const handleSaveEdit = async () => {
     if (falhaEditando) {
-      // Atualiza a falha no estado local
-      const updatedFalhas = falhas.map(f => 
-        f.id === falhaEditando.id ? falhaEditando : f
-      );
-      setFalhas(updatedFalhas);
-      
-      // Atualiza no objeto global (em uma aplicação real, isso seria uma chamada API)
-      if (unidadeSelecionada) {
-        falhasUnidades[Number(unidadeSelecionada)] = updatedFalhas;
+      setLoading(true);
+      try {
+        const response = await fetch(`http://127.0.0.1:8000/api/falhas/${falhaEditando.id}/`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            falha_ocorrida: falhaEditando.falha_ocorrida,
+            data_falha: falhaEditando.data_falha,
+            ativa: falhaEditando.ativa,
+            observacao: falhaEditando.observacao,
+            unidade: falhaEditando.unidade,
+          }),
+        });
+
+        if (response.ok) {
+          setFalhas(falhas.map(f => 
+            f.id === falhaEditando.id ? falhaEditando : f
+          ));
+          setSuccessMessage('Falha atualizada com sucesso!');
+          handleCloseDialog();
+        } else {
+          setErrorMessage('Erro ao atualizar falha');
+        }
+      } catch (error) {
+        setErrorMessage('Erro ao conectar com o servidor');
+      } finally {
+        setLoading(false);
       }
-      
-      handleCloseDialog();
     }
+  };
+
+  const handleCloseSnackbar = () => {
+    setSuccessMessage('');
+    setErrorMessage('');
   };
 
   return (
@@ -121,13 +182,21 @@ function MonitoramentoUnidade() {
             value={unidadeSelecionada}
             label="Selecione uma Unidade"
             onChange={handleUnidadeChange}
+            disabled={loadingUnidades}
           >
             <MenuItem value=""><em>Selecione</em></MenuItem>
-            {unidades.map((unidade) => (
-              <MenuItem key={unidade.id} value={unidade.id.toString()}>
-                {unidade.nome}
+            {loadingUnidades ? (
+              <MenuItem disabled>
+                <CircularProgress size={20} sx={{ mr: 1 }} />
+                Carregando unidades...
               </MenuItem>
-            ))}
+            ) : (
+              unidades.map((unidade) => (
+                <MenuItem key={unidade.id} value={unidade.id.toString()}>
+                  {unidade.nome_unidade}
+                </MenuItem>
+              ))
+            )}
           </Select>
         </FormControl>
 
@@ -137,7 +206,11 @@ function MonitoramentoUnidade() {
               Histórico de Falhas
             </Typography>
             
-            {falhas.length > 0 ? (
+            {loadingFalhas ? (
+              <Box sx={{ display: 'flex', justifyContent: 'center', p: 4 }}>
+                <CircularProgress />
+              </Box>
+            ) : falhas.length > 0 ? (
               <TableContainer>
                 <Table>
                   <TableHead>
@@ -152,23 +225,14 @@ function MonitoramentoUnidade() {
                   <TableBody>
                     {falhas.map((falha) => (
                       <TableRow key={falha.id}>
-                        <TableCell>{falha.falhaOcorrida}</TableCell>
-                        <TableCell>{falha.dataFalha}</TableCell>
+                        <TableCell>{falha.falha_ocorrida}</TableCell>
+                        <TableCell>{new Date(falha.data_falha).toLocaleDateString('pt-BR')}</TableCell>
                         <TableCell>
-                          <Box
-                            sx={{
-                              display: 'inline-block',
-                              px: 1.5,
-                              py: 0.5,
-                              borderRadius: 1,
-                              bgcolor: falha.ativa ? 'error.light' : 'success.light',
-                              color: falha.ativa ? 'error.dark' : 'success.dark',
-                              fontWeight: 'medium',
-                              fontSize: '0.75rem',
-                            }}
-                          >
-                            {falha.ativa ? 'Ativa' : 'Resolvida'}
-                          </Box>
+                          <Chip
+                            label={falha.ativa ? 'Ativa' : 'Resolvida'}
+                            color={falha.ativa ? 'error' : 'success'}
+                            variant="outlined"
+                          />
                         </TableCell>
                         <TableCell>{falha.observacao || '-'}</TableCell>
                         <TableCell>
@@ -177,6 +241,7 @@ function MonitoramentoUnidade() {
                             size="small"
                             startIcon={<EditIcon />}
                             onClick={() => handleEditClick(falha)}
+                            disabled={loading}
                           >
                             Editar
                           </Button>
@@ -204,14 +269,14 @@ function MonitoramentoUnidade() {
               <TextField
                 label="Falha Ocorrida"
                 fullWidth
-                value={falhaEditando.falhaOcorrida}
-                onChange={(e) => setFalhaEditando({...falhaEditando, falhaOcorrida: e.target.value})}
+                value={falhaEditando.falha_ocorrida}
+                onChange={(e) => setFalhaEditando({...falhaEditando, falha_ocorrida: e.target.value})}
               />
               <TextField
                 label="Data da Falha"
                 fullWidth
-                value={falhaEditando.dataFalha}
-                onChange={(e) => setFalhaEditando({...falhaEditando, dataFalha: e.target.value})}
+                value={falhaEditando.data_falha}
+                onChange={(e) => setFalhaEditando({...falhaEditando, data_falha: e.target.value})}
               />
               <TextField
                 label="Observação"
@@ -234,10 +299,39 @@ function MonitoramentoUnidade() {
           )}
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseDialog}>Cancelar</Button>
-          <Button onClick={handleSaveEdit} variant="contained" color="primary">Salvar</Button>
+          <Button onClick={handleCloseDialog} disabled={loading}>Cancelar</Button>
+          <Button 
+            onClick={handleSaveEdit} 
+            variant="contained" 
+            color="primary"
+            disabled={loading}
+            startIcon={loading ? <CircularProgress size={20} /> : null}
+          >
+            {loading ? 'Salvando...' : 'Salvar'}
+          </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Snackbars para mensagens */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+      >
+        <Alert onClose={handleCloseSnackbar} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

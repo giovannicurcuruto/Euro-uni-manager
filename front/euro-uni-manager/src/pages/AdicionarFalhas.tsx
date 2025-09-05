@@ -1,177 +1,322 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
   Box,
   Paper,
+  TextField,
+  Button,
   FormControl,
   InputLabel,
   Select,
   MenuItem,
-  TextField,
-  Button,
-  Grid,
   FormHelperText,
   SelectChangeEvent,
+  Alert,
+  Snackbar,
+  CircularProgress,
 } from '@mui/material';
 import { LocalizationProvider, DatePicker } from '@mui/x-date-pickers';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import ptBR from 'date-fns/locale/pt-BR';
 
-// Dados de exemplo para as unidades
-const unidades = [
-  { id: 1, nome: 'Unidade A' },
-  { id: 2, nome: 'Unidade B' },
-  { id: 3, nome: 'Unidade C' },
-];
+interface Unidade {
+  id: number;
+  nome_unidade: string;
+  grupo_unidade: string;
+  tecnico_unidade: string;
+  id_unidade: string;
+  observacoes: string;
+}
+
+interface FalhaFormData {
+  unidade: string;
+  falha_ocorrida: string;
+  data_falha: Date | null;
+  observacao: string;
+}
 
 function AdicionarFalhas() {
-  const [unidadeSelecionada, setUnidadeSelecionada] = useState<string>('');
-  const [falhaOcorrida, setFalhaOcorrida] = useState<string>('');
-  const [dataFalha, setDataFalha] = useState<Date | null>(null);
-  const [observacao, setObservacao] = useState<string>('');
+  const [unidades, setUnidades] = useState<Unidade[]>([]);
+  const [falhaData, setFalhaData] = useState<FalhaFormData>({
+    unidade: '',
+    falha_ocorrida: '',
+    data_falha: null,
+    observacao: '',
+  });
+  const [loading, setLoading] = useState(false);
+  const [loadingUnidades, setLoadingUnidades] = useState(true);
+  const [successMessage, setSuccessMessage] = useState('');
+  const [errorMessage, setErrorMessage] = useState('');
+
+  const [falhaErrors, setFalhaErrors] = useState<Partial<Record<keyof FalhaFormData, string>>>({
+    unidade: '',
+    falha_ocorrida: '',
+    data_falha: '',
+  });
+
+  // Carregar unidades do backend
+  useEffect(() => {
+    const fetchUnidades = async () => {
+      try {
+        const response = await fetch('http://127.0.0.1:8000/api/unidades/');
+        if (response.ok) {
+          const data = await response.json();
+          setUnidades(data);
+        } else {
+          setErrorMessage('Erro ao carregar unidades');
+        }
+      } catch (error) {
+        setErrorMessage('Erro ao conectar com o servidor');
+      } finally {
+        setLoadingUnidades(false);
+      }
+    };
+
+    fetchUnidades();
+  }, []);
   
-  // Estados para validação
-  const [unidadeError, setUnidadeError] = useState<boolean>(false);
-  const [falhaError, setFalhaError] = useState<boolean>(false);
-  const [dataError, setDataError] = useState<boolean>(false);
-  
-  const handleUnidadeChange = (event: SelectChangeEvent) => {
-    const value = event.target.value;
-    setUnidadeSelecionada(value);
-    setUnidadeError(value === '');
+  const handleFalhaChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFalhaData({
+      ...falhaData,
+      [name]: value,
+    });
+
+    if (falhaErrors[name as keyof FalhaFormData]) {
+      setFalhaErrors({
+        ...falhaErrors,
+        [name]: '',
+      });
+    }
+  };
+
+  const handleSelectChange = (e: SelectChangeEvent) => {
+    const { name, value } = e.target;
+    setFalhaData({
+      ...falhaData,
+      [name]: value,
+    });
+
+    if (falhaErrors[name as keyof FalhaFormData]) {
+      setFalhaErrors({
+        ...falhaErrors,
+        [name]: '',
+      });
+    }
+  };
+
+  const handleDateChange = (date: Date | null) => {
+    setFalhaData({
+      ...falhaData,
+      data_falha: date,
+    });
+
+    if (date) {
+      setFalhaErrors({
+        ...falhaErrors,
+        data_falha: '',
+      });
+    }
   };
   
-  const handleFalhaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    setFalhaOcorrida(value);
-    setFalhaError(value === '');
-  };
-  
-  const handleDataChange = (newValue: Date | null) => {
-    setDataFalha(newValue);
-    setDataError(newValue === null);
-  };
-  
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const handleFalhaSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
     
-    // Validação dos campos obrigatórios
-    const unidadeInvalida = unidadeSelecionada === '';
-    const falhaInvalida = falhaOcorrida === '';
-    const dataInvalida = dataFalha === null;
+    const newErrors: Partial<Record<keyof FalhaFormData, string>> = {};
     
-    setUnidadeError(unidadeInvalida);
-    setFalhaError(falhaInvalida);
-    setDataError(dataInvalida);
+    if (!falhaData.unidade.trim()) {
+      newErrors.unidade = 'Unidade é obrigatória';
+    }
     
-    if (!unidadeInvalida && !falhaInvalida && !dataInvalida) {
-      // Aqui você implementaria a lógica para salvar a falha
-      console.log('Falha registrada:', {
-        unidadeId: unidadeSelecionada,
-        falhaOcorrida,
-        dataFalha,
-        observacao,
-        ativa: true, // Por padrão, a falha é criada como ativa
+    if (!falhaData.falha_ocorrida.trim()) {
+      newErrors.falha_ocorrida = 'Falha ocorrida é obrigatória';
+    }
+    
+    if (!falhaData.data_falha) {
+      newErrors.data_falha = 'Data da falha é obrigatória';
+    }
+    
+    if (Object.keys(newErrors).length > 0) {
+      setFalhaErrors(newErrors);
+      return;
+    }
+    
+    setLoading(true);
+    setErrorMessage('');
+    
+    try {
+      const formattedData = {
+        unidade: parseInt(falhaData.unidade),
+        falha_ocorrida: falhaData.falha_ocorrida,
+        data_falha: falhaData.data_falha?.toISOString().split('T')[0], // Format: YYYY-MM-DD
+        observacao: falhaData.observacao,
+        ativa: true
+      };
+      
+      const response = await fetch('http://127.0.0.1:8000/api/falhas/', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formattedData),
       });
       
-      // Limpar o formulário após o envio
-      setFalhaOcorrida('');
-      setDataFalha(null);
-      setObservacao('');
-      // Manter a unidade selecionada para facilitar o registro de múltiplas falhas
+      if (response.ok) {
+        setSuccessMessage('Falha registrada com sucesso!');
+        setFalhaData({
+          unidade: '',
+          falha_ocorrida: '',
+          data_falha: null,
+          observacao: '',
+        });
+        setFalhaErrors({});
+      } else {
+        const errorData = await response.json();
+        setErrorMessage('Erro ao registrar falha: ' + (errorData.detail || 'Erro desconhecido'));
+      }
+    } catch (error) {
+      setErrorMessage('Erro ao conectar com o servidor');
+    } finally {
+      setLoading(false);
     }
   };
   
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h4" component="h1" gutterBottom align="center">
-        Adicionar Falhas
-      </Typography>
-      
-      <Paper elevation={3} sx={{ mt: 4, p: 3 }}>
-        <Box component="form" onSubmit={handleSubmit} noValidate>
-          <Grid container spacing={3}>
-            <Grid item xs={12}>
-              <FormControl fullWidth error={unidadeError}>
-                <InputLabel id="unidade-select-label">Selecione uma Unidade</InputLabel>
-                <Select
-                  labelId="unidade-select-label"
-                  id="unidade-select"
-                  value={unidadeSelecionada}
-                  label="Selecione uma Unidade"
-                  onChange={handleUnidadeChange}
-                  required
-                >
-                  <MenuItem value=""><em>Selecione</em></MenuItem>
-                  {unidades.map((unidade) => (
-                    <MenuItem key={unidade.id} value={unidade.id.toString()}>
-                      {unidade.nome}
-                    </MenuItem>
-                  ))}
-                </Select>
-                {unidadeError && <FormHelperText>Selecione uma unidade</FormHelperText>}
-              </FormControl>
-            </Grid>
+      <Paper elevation={3} sx={{ p: 3, borderRadius: 2 }}>
+        <Typography variant="h5" component="h1" gutterBottom color="primary" fontWeight="bold" sx={{ mb: 3 }}>
+          Registrar Falha
+        </Typography>
+        
+        <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
+          <Box 
+             component="form" 
+             onSubmit={handleFalhaSubmit} 
+             noValidate
+             sx={{
+               display: 'grid',
+               gridTemplateColumns: { xs: '1fr', md: 'repeat(3, 1fr)' },
+               gap: 3,
+               '& .full-width': {
+                 gridColumn: { xs: '1', md: '1 / -1' }
+               },
+               '& .buttons-row': {
+                 gridColumn: '1 / -1',
+                 display: 'flex',
+                 justifyContent: 'flex-end',
+                 mt: 2
+               }
+             }}
+           >
+             {/* Primeira linha: Unidade *, Falha Ocorrida *, Data da Falha * */}
+             <FormControl fullWidth error={!!falhaErrors.unidade}>
+               <InputLabel id="unidade-select-label">Unidade *</InputLabel>
+               <Select
+                 labelId="unidade-select-label"
+                 id="unidade"
+                 name="unidade"
+                 value={falhaData.unidade}
+                 label="Unidade *"
+                 onChange={handleSelectChange}
+                 required
+                 disabled={loadingUnidades || loading}
+               >
+                 <MenuItem value=""><em>Selecione</em></MenuItem>
+                 {loadingUnidades ? (
+                   <MenuItem disabled>
+                     <CircularProgress size={20} /> Carregando unidades...
+                   </MenuItem>
+                 ) : (
+                   unidades.map((unidade) => (
+                     <MenuItem key={unidade.id} value={unidade.id.toString()}>
+                       {unidade.nome_unidade}
+                     </MenuItem>
+                   ))
+                 )}
+               </Select>
+               {falhaErrors.unidade && <FormHelperText>{falhaErrors.unidade}</FormHelperText>}
+             </FormControl>
+             
+             <TextField
+               required
+               fullWidth
+               id="falhaOcorrida"
+               name="falha_ocorrida"
+               label="Falha Ocorrida"
+               value={falhaData.falha_ocorrida}
+               onChange={handleFalhaChange}
+               error={!!falhaErrors.falha_ocorrida}
+               helperText={falhaErrors.falha_ocorrida}
+               disabled={loading}
+             />
+             
+             <DatePicker
+               label="Data da Falha *"
+               value={falhaData.data_falha}
+               onChange={handleDateChange}
+               disabled={loading}
+               slotProps={{
+                 textField: {
+                   fullWidth: true,
+                   error: !!falhaErrors.data_falha,
+                   helperText: falhaErrors.data_falha,
+                 }
+               }}
+             />
             
-            <Grid item xs={12}>
-              <TextField
-                required
-                fullWidth
-                id="falha-ocorrida"
-                label="Falha Ocorrida"
-                value={falhaOcorrida}
-                onChange={handleFalhaChange}
-                error={falhaError}
-                helperText={falhaError ? 'Informe a falha ocorrida' : ''}
-              />
-            </Grid>
+            {/* Segunda linha: Observação (textarea ocupando toda a largura) */}
+            <TextField
+              fullWidth
+              id="observacao"
+              name="observacao"
+              label="Observação"
+              multiline
+              rows={4}
+              value={falhaData.observacao}
+              onChange={handleFalhaChange}
+              className="full-width"
+              disabled={loading}
+            />
             
-            <Grid item xs={12}>
-              <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={ptBR}>
-                <DatePicker
-                  label="Data da Falha"
-                  value={dataFalha}
-                  onChange={handleDataChange}
-                  slotProps={{
-                    textField: {
-                      fullWidth: true,
-                      required: true,
-                      error: dataError,
-                      helperText: dataError ? 'Informe a data da falha' : '',
-                    },
-                  }}
-                />
-              </LocalizationProvider>
-            </Grid>
-            
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                id="observacao"
-                label="Observação"
-                multiline
-                rows={4}
-                value={observacao}
-                onChange={(e) => setObservacao(e.target.value)}
-                placeholder="Adicione informações relevantes sobre a falha"
-              />
-            </Grid>
-            
-            <Grid item xs={12} sx={{ mt: 2 }}>
+            {/* Terceira linha: Botão Registrar Falha alinhado à direita */}
+            <Box className="buttons-row">
               <Button
                 type="submit"
                 variant="contained"
                 color="primary"
-                fullWidth
-                size="large"
+                disabled={loading || loadingUnidades}
+                startIcon={loading ? <CircularProgress size={20} /> : null}
               >
-                Registrar Falha
+                {loading ? 'Registrando...' : 'Registrar Falha'}
               </Button>
-            </Grid>
-          </Grid>
-        </Box>
+            </Box>
+          </Box>
+        </LocalizationProvider>
       </Paper>
+      
+      {/* Snackbars para feedback */}
+      <Snackbar
+        open={!!successMessage}
+        autoHideDuration={6000}
+        onClose={() => setSuccessMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setSuccessMessage('')} severity="success" sx={{ width: '100%' }}>
+          {successMessage}
+        </Alert>
+      </Snackbar>
+      
+      <Snackbar
+        open={!!errorMessage}
+        autoHideDuration={6000}
+        onClose={() => setErrorMessage('')}
+        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
+      >
+        <Alert onClose={() => setErrorMessage('')} severity="error" sx={{ width: '100%' }}>
+          {errorMessage}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 }

@@ -26,8 +26,32 @@ import {
   TablePagination,
   Chip,
 } from '@mui/material';
-import { falhasUnidades } from './MonitoramentoUnidade';
-import { Falha } from './MonitoramentoUnidade';
+// Interfaces para os dados do backend
+interface Unidade {
+  id: number;
+  nome_unidade: string;
+  grupo_unidade: string;
+  tecnico_unidade: string;
+  id_unidade: string;
+  observacoes: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface Falha {
+  id: number;
+  falha_ocorrida: string;
+  data_falha: string;
+  ativa: boolean;
+  observacao?: string;
+  unidade: number;
+  created_at: string;
+  updated_at: string;
+}
+
+interface FalhaComUnidade extends Falha {
+  unidade_nome: string;
+}
 
 function Dashboard() {
   const [mes, setMes] = useState<string>(new Date().getMonth() + 1 + '');
@@ -41,60 +65,83 @@ function Dashboard() {
   // Estado para controlar o modal
   const [modalOpen, setModalOpen] = useState(false);
   const [tipoFalhaModal, setTipoFalhaModal] = useState<'ativas' | 'fechadas' | 'todas' | null>(null);
-  const [falhasFiltradas, setFalhasFiltradas] = useState<(Falha & { unidadeNome: string })[]>([]);
+  const [falhasFiltradas, setFalhasFiltradas] = useState<FalhaComUnidade[]>([]);
   
   // Estados para paginação
   const [page, setPage] = useState(0);
   const [rowsPerPage, setRowsPerPage] = useState(20);
+  
+  // Estados para dados do backend
+  const [unidades, setUnidades] = useState<Unidade[]>([]);
+  const [falhas, setFalhas] = useState<Falha[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Função para buscar dados do backend
+  const fetchDados = async () => {
+    try {
+      setLoading(true);
+      const [unidadesResponse, falhasResponse] = await Promise.all([
+        fetch('http://localhost:8000/api/unidades/'),
+        fetch('http://localhost:8000/api/falhas/')
+      ]);
+      
+      if (unidadesResponse.ok && falhasResponse.ok) {
+        const unidadesData: Unidade[] = await unidadesResponse.json();
+        const falhasData: Falha[] = await falhasResponse.json();
+        
+        setUnidades(unidadesData);
+        setFalhas(falhasData);
+      }
+    } catch (error) {
+      console.error('Erro ao buscar dados:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  useEffect(() => {
+    fetchDados();
+  }, []);
 
   // Função para calcular estatísticas com base no mês e ano selecionados
   const calcularEstatisticas = () => {
     let ativas = 0;
     let fechadas = 0;
     let total = 0;
-    const falhasAtivasList: (Falha & { unidadeNome: string })[] = [];
-    const falhasFechadasList: (Falha & { unidadeNome: string })[] = [];
-    const falhasTotalList: (Falha & { unidadeNome: string })[] = [];
+    const falhasAtivasList: FalhaComUnidade[] = [];
+    const falhasFechadasList: FalhaComUnidade[] = [];
+    const falhasTotalList: FalhaComUnidade[] = [];
 
-    // Dados de exemplo para as unidades
-    const unidades = [
-      { id: 1, nome: 'Unidade A' },
-      { id: 2, nome: 'Unidade B' },
-      { id: 3, nome: 'Unidade C' },
-    ];
-
-    // Percorre todas as unidades e suas falhas
-    Object.keys(falhasUnidades).forEach(unidadeId => {
-      const unidadeNome = unidades.find(u => u.id === Number(unidadeId))?.nome || 'Unidade Desconhecida';
+    // Percorre todas as falhas do backend
+    falhas.forEach(falha => {
+      const unidade = unidades.find(u => u.id === falha.unidade);
+      const unidade_nome = unidade?.nome_unidade || 'Unidade Desconhecida';
       
-      falhasUnidades[Number(unidadeId)].forEach(falha => {
-        // Converte a data da falha para objeto Date
-        const partesData = falha.dataFalha.split('/');
-        const dataFalha = new Date(parseInt(partesData[2]), parseInt(partesData[1]) - 1, parseInt(partesData[0]));
+      // Converte a data da falha para objeto Date
+      const dataFalha = new Date(falha.data_falha);
+      
+      // Verifica se a falha ocorreu no mês e ano selecionados
+      if (dataFalha.getMonth() + 1 === parseInt(mes) && dataFalha.getFullYear() === parseInt(ano)) {
+        const falhaComUnidade: FalhaComUnidade = { ...falha, unidade_nome };
+        total++;
+        falhasTotalList.push(falhaComUnidade);
         
-        // Verifica se a falha ocorreu no mês e ano selecionados
-        if (dataFalha.getMonth() + 1 === parseInt(mes) && dataFalha.getFullYear() === parseInt(ano)) {
-          const falhaComUnidade = { ...falha, unidadeNome };
-          total++;
-          falhasTotalList.push(falhaComUnidade);
-          
-          if (falha.ativa) {
-            ativas++;
-            falhasAtivasList.push(falhaComUnidade);
-          } else {
-            fechadas++;
-            falhasFechadasList.push(falhaComUnidade);
-          }
+        if (falha.ativa) {
+          ativas++;
+          falhasAtivasList.push(falhaComUnidade);
+        } else {
+          fechadas++;
+          falhasFechadasList.push(falhaComUnidade);
         }
-      });
+      }
     });
 
     setEstatisticas({ ativas, fechadas, total });
     
     // Ordena as listas por data (mais recentes primeiro)
-    const ordenarPorData = (a: Falha & { unidadeNome: string }, b: Falha & { unidadeNome: string }) => {
-      const dataA = new Date(a.dataFalha.split('/').reverse().join('-'));
-      const dataB = new Date(b.dataFalha.split('/').reverse().join('-'));
+    const ordenarPorData = (a: FalhaComUnidade, b: FalhaComUnidade) => {
+      const dataA = new Date(a.data_falha);
+      const dataB = new Date(b.data_falha);
       return dataB.getTime() - dataA.getTime();
     };
     
@@ -106,12 +153,18 @@ function Dashboard() {
     return { falhasAtivasList, falhasFechadasList, falhasTotalList };
   };
 
-  // Recalcula as estatísticas quando o mês ou ano mudar
+  // Recalcula as estatísticas quando o mês, ano ou dados mudarem
   useEffect(() => {
-    const { falhasAtivasList, falhasFechadasList, falhasTotalList } = calcularEstatisticas();
-    
-    // Atualiza as falhas filtradas se o modal estiver aberto
-    if (modalOpen && tipoFalhaModal) {
+    if (unidades.length > 0 && falhas.length > 0) {
+      calcularEstatisticas();
+    }
+  }, [mes, ano, unidades, falhas]);
+
+  // Atualiza as falhas filtradas quando o modal é aberto
+  useEffect(() => {
+    if (modalOpen && tipoFalhaModal && unidades.length > 0 && falhas.length > 0) {
+      const { falhasAtivasList, falhasFechadasList, falhasTotalList } = calcularEstatisticas();
+      
       if (tipoFalhaModal === 'ativas') {
         setFalhasFiltradas(falhasAtivasList);
       } else if (tipoFalhaModal === 'fechadas') {
@@ -120,7 +173,7 @@ function Dashboard() {
         setFalhasFiltradas(falhasTotalList);
       }
     }
-  }, [mes, ano, modalOpen, tipoFalhaModal]);
+  }, [modalOpen, tipoFalhaModal, unidades, falhas]);
 
   const handleMesChange = (event: SelectChangeEvent) => {
     setMes(event.target.value);
@@ -328,10 +381,10 @@ function Dashboard() {
                     {falhasFiltradas
                       .slice(page * rowsPerPage, page * rowsPerPage + rowsPerPage)
                       .map((falha) => (
-                        <TableRow key={`${falha.id}-${falha.unidadeNome}`}>
-                          <TableCell>{falha.unidadeNome}</TableCell>
-                          <TableCell>{falha.falhaOcorrida}</TableCell>
-                          <TableCell>{falha.dataFalha}</TableCell>
+                        <TableRow key={`${falha.id}-${falha.unidade_nome}`}>
+                          <TableCell>{falha.unidade_nome}</TableCell>
+                          <TableCell>{falha.falha_ocorrida}</TableCell>
+                          <TableCell>{new Date(falha.data_falha).toLocaleDateString('pt-BR')}</TableCell>
                           <TableCell>
                             <Chip
                               label={falha.ativa ? 'Ativa' : 'Resolvida'}
